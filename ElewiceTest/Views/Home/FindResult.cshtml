@@ -1,0 +1,34 @@
+﻿@model IEnumerable<ElewiceTest.Models.Document>
+
+@foreach (var item in Model)
+{
+    <tr>
+        <td class="tg-yw4l">
+            @{
+                string[] strs = Html.DisplayFor(modelItem => item.Name).ToString().Split('.');
+                string str;
+                if (strs.First().Length > 30)
+                {
+                    str = strs.First().Substring(0, 30) + "...";
+                }
+                else
+                {
+                    str = strs.First();
+                }
+            }
+            @Html.Raw(str)
+        </td>
+        <td class="tg-yw4l">
+            @Html.DisplayFor(modelItem => item.Date)
+        </td>
+        <td class="tg-yw4l">
+            @Html.DisplayFor(modelItem => item.Author)
+        </td>
+        <td class="tg-yw4l">
+            @*@Html.ActionLink("<img src=\"~/App_Data/download_icon.png\" />", "DownloadFile", "Home", new { fileForDownload = item.Name }, null)*@
+            <a href="@Url.Action("DownloadFile", "Home", new { fileForDownload = item.Name })">
+                <img src="@Url.Content("~/Images/download_icon.png")" width="20" height="20" />
+            </a>
+        </td>
+    </tr>
+}

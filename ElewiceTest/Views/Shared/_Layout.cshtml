@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    @{
+        if (ViewBag.Title == "Index")
+        {
+            <link href="@Url.Content("~/Content/TableStyle.css")" rel="stylesheet" type="text/css" />
+
+        }
+    }
+</head>
+<body>
+    <h3>@ViewBag.Title</h3>
+    <hr />
+    <table>
+        <tr>
+            <td>
+                @Html.ActionLink("Index", "Index") |
+                @Html.ActionLink("Create document", "Create")
+            </td>
+        </tr>
+        <tr>
+            <td>
+                You are authorized as <b>@ViewBag.Username</b> @Html.ActionLink("LogOut", "LogOff", "Account")
+            </td>
+        </tr>
+    </table>
+    @RenderBody()
+</body>
+</html>

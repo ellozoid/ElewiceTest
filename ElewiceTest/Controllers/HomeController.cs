@@ -55,7 +55,6 @@ namespace ElewiceTest.Controllers
             var session = NHibernateHelper.MakeSession();
             ViewBag.Username = CurrentUser.UserName;
             string createRequest = Request.Params["createBtn"];
-            //string fileNameRequest = Request.Params["Name"];
             string fileAuthorRequest = CurrentUser.UserName;
             string uploadedFileName;
             string[] nameSeparate = new string[100];
@@ -74,11 +73,11 @@ namespace ElewiceTest.Controllers
             else
             {
                 if (model.uploadedFile == null && model.Name == string.Empty)
-                    ModelState.AddModelError("", "Введите имя документа и выберете файл для загрузки");
+                    ModelState.AddModelError("", "Enter the name of the document and select the file to upload.");
                 else if (model.Name == string.Empty)
-                    ModelState.AddModelError("", "Введите имя документа");
+                    ModelState.AddModelError("", "Enter the name of the document");
                 else if (model.uploadedFile == null)
-                    ModelState.AddModelError("", "Выберете файл для загрузки");
+                    ModelState.AddModelError("", "Select the file to upload");
             }
             return View(model);
         }

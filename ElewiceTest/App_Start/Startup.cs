@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNet.Identity;
+﻿using DBModel.Helpers;
+using DBModel.Models.Identity;
+using ElewiceTest;
+using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
-using ElewiceTest;
-using ElewiceTest.Models;
-using ElewiceTest.Models.Identity;
-using ElewiceTest.Models.NHibernate;
 using Owin;
 
 [assembly: OwinStartup(typeof(Startup))]

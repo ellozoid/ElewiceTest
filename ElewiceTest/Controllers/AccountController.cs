@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
-using ElewiceTest.Models.Identity;
 using System.Web;
 using System.Web.Mvc;
+using DBModel.Models;
+using DBModel.Models.Identity;
 
 namespace ElewiceTest.Controllers
 {

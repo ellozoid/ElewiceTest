@@ -1,4 +1,4 @@
-﻿@model ElewiceTest.Models.Identity.LoginViewModel
+﻿@model DBModel.Models.Identity.LoginViewModel
 
 @{
     Layout = null;
@@ -14,7 +14,7 @@
     <body>
         <h2>Login</h2>
         @using (Html.BeginForm())
-        {
+        { 
             @Html.ValidationSummary()
             <table>
                 <tr>

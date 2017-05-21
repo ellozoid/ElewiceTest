@@ -1,21 +1,27 @@
-﻿using ElewiceTest.Models;
-using ElewiceTest.Models.NHibernate;
-using NHibernate;
+﻿using NHibernate;
 using NHibernate.Linq;
-using NHibernate.Transform;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
-using ElewiceTest.Models.Identity;
+using System.Collections.Generic;
+using DBModel.Models;
+using DBModel.Helpers;
+using DBModel.Managers;
+using DBModel.Models.Identity;
+using DBModel.Interfaces;
+using System.IO;
 
 namespace ElewiceTest.Controllers
 {
     public class HomeController : Controller
     {
-
+        #region PrivateMembers
         private User currentUser = null;
+        private DocumentManager DocumentManager { get; set; }
+        private IEnumerable<Document> DocumentList { get; set; }
+        private UserRepositoryManager UserManager { get; set; }
+        private const string FDir_AppData = "~/App_Data/Documents/";
+        #endregion
         public User CurrentUser
         {
             get
@@ -25,24 +31,28 @@ namespace ElewiceTest.Controllers
                     string userName = User.Identity.Name;
                     if (userName != null)
                     {
-                        currentUser = new NHibernateHelper().Users.FindByNameAsync(userName).Result;
+                        currentUser = UserManager.GetCurrentUser(userName);
                     }
                 }
                 return currentUser;
             }
         }
+        public HomeController()
+        {
+            DocumentManager = new DocumentManager();
+            UserManager = new UserRepositoryManager();
+            DocumentList = DocumentManager.GetAll();
+
+        }
         //GET: Home
         [Authorize]
         public ActionResult Index()
         {
-            if(CurrentUser != null)
+            if (CurrentUser != null)
             {
                 ViewBag.Username = CurrentUser.UserName;
             }
-            var session = NHibernateHelper.MakeSession();
-            var documents = session.Query<Document>().ToList();
-
-            return View(documents);
+            return View(DocumentList);
         }
         public ActionResult Create()
         {
@@ -50,24 +60,27 @@ namespace ElewiceTest.Controllers
             return View();
         }
         [HttpPost]
-        public ActionResult Create(CreateViewModel model)
+        public ActionResult Create(Document model)
         {
-            var session = NHibernateHelper.MakeSession();
             ViewBag.Username = CurrentUser.UserName;
-            string createRequest = Request.Params["createBtn"];
-            string fileAuthorRequest = CurrentUser.UserName;
-            string uploadedFileName;
-            string[] nameSeparate = new string[100];
             if (model.uploadedFile != null && model.Name != string.Empty)
             {
-                uploadedFileName = System.IO.Path.GetFileName(model.uploadedFile.FileName);
-                nameSeparate = uploadedFileName.Split('.');
-                model.uploadedFile.SaveAs(Server.MapPath("~/App_Data/Documents/" + model.Name + '.' + nameSeparate.Last()));
-                IQuery query = session.CreateSQLQuery("exec NewDocument @Name=:name, @Author=:author, @Date=:date");
-                query.SetString("name", model.Name + '.' + nameSeparate.Last());
-                query.SetString("author", fileAuthorRequest);
-                query.SetDateTime("date", DateTime.Now);
-                query.ExecuteUpdate();
+                var uploadedFileName = Path.GetFileName(model.uploadedFile.FileName);
+                model.Name = $"{model.Name}.{uploadedFileName.Split('.').Last()}";
+                model.Author = CurrentUser.UserName;
+                //UserFile.Save(model);
+                if (!Directory.Exists($"{FDir_AppData}{model.Author}"))
+                {
+                    var path = Server.MapPath($"{FDir_AppData}{model.Author}");
+                    Directory.CreateDirectory(path);
+                    model.uploadedFile.SaveAs(Server.MapPath($"{FDir_AppData}{model.Author}/{model.Name}"));
+                }
+                else
+                {
+                    model.uploadedFile.SaveAs(Server.MapPath($"{FDir_AppData}{model.Author}/{model.Name}"));
+                }
+                //Сохраняем здесь
+                DocumentManager.Save(model);
                 return RedirectToAction("Index");
             }
             else
@@ -81,10 +94,9 @@ namespace ElewiceTest.Controllers
             }
             return View(model);
         }
-        public FilePathResult DownloadFile(string fileForDownload)
+        public FilePathResult DownloadFile(string fileForDownload, string author)
         {
-            string FDir_AppData = "~/App_Data/Documents/";
-            var documentPath = Server.MapPath(FDir_AppData + fileForDownload);
+            var documentPath = Server.MapPath($"{FDir_AppData}{author}/{fileForDownload}");
             return File(documentPath, "application/unknown", fileForDownload);
         }
 
@@ -92,14 +104,12 @@ namespace ElewiceTest.Controllers
         public ActionResult Index(string str)
         {
             ViewBag.Username = CurrentUser.UserName;
-            var session = NHibernateHelper.MakeSession();
-            string findQuery = Request.Params["findQuery"];
-            var documents = session.Query<Document>().Where<Document>(x => x.Name.Contains(findQuery)).ToList(); //.Query<Document>().Where(x => x.Name.Like(findQuery)).ToList();
-            if (findQuery != string.Empty)
-                ViewBag.SearchResult = string.Format("Results for : <b>{0}</b>", findQuery);
+            var searchQuery = Request.Params["findQuery"];
+            if (searchQuery != string.Empty)
+                ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b>";
             else
                 ViewBag.SearchResult = string.Empty;
-            return View("Index", documents); //("Index", documents);
+            return View("Index", DocumentManager.GetAllByCriteria(searchQuery));
         }
     }
 }

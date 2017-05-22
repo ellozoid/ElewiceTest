@@ -21,6 +21,7 @@ namespace ElewiceTest.Controllers
         private IEnumerable<Document> DocumentList { get; set; }
         private UserRepositoryManager UserManager { get; set; }
         private const string FDir_AppData = "~/App_Data/Documents/";
+        private List<SelectListItem> listItems;
         #endregion
         public User CurrentUser
         {
@@ -42,12 +43,31 @@ namespace ElewiceTest.Controllers
             DocumentManager = new DocumentManager();
             UserManager = new UserRepositoryManager();
             DocumentList = DocumentManager.GetAll();
-
+            listItems = new List<SelectListItem>();
+            listItems.Add(new SelectListItem
+            {
+                Text = "Name",
+                Value = "Name",
+                Selected = true
+            });
+            listItems.Add(new SelectListItem
+            {
+                Text = "Author",
+                Value = "Author",
+                Selected = false
+            });
+            listItems.Add(new SelectListItem
+            {
+                Text = "Date",
+                Value = "Date",
+                Selected = false
+            });
         }
         //GET: Home
         [Authorize]
         public ActionResult Index()
         {
+            ViewData["SearchBy"] = listItems;
             if (CurrentUser != null)
             {
                 ViewBag.Username = CurrentUser.UserName;
@@ -103,13 +123,25 @@ namespace ElewiceTest.Controllers
         [HttpPost]
         public ActionResult Index(string str)
         {
+            ViewData["SearchBy"] = listItems;
             ViewBag.Username = CurrentUser.UserName;
+            var criteria = Request.Params["SearchBy"];
             var searchQuery = Request.Params["findQuery"];
+            ChangeSelect(criteria);
             if (searchQuery != string.Empty)
-                ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b>";
+                ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b> (Search by {criteria})";
             else
                 ViewBag.SearchResult = string.Empty;
-            return View("Index", DocumentManager.GetAllByCriteria(searchQuery));
+            return View("Index", DocumentManager.GetAllByCriteria(searchQuery, criteria));
+        }
+        private void ChangeSelect(string item)
+        {
+            if (item == "Name")
+                listItems[0].Selected = true;
+            else if (item == "Author")
+                listItems[1].Selected = true;
+            else if (item == "Date")
+                listItems[2].Selected = true;
         }
     }
 }

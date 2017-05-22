@@ -26,7 +26,13 @@ namespace DBModel.Managers
 
         public IEnumerable<Document> GetAllByCriteria(string searchQuery, string searchCriteria = "Name")
         {
-            var documents = session.Query<Document>().Where<Document>(x => x.Name.Contains(searchQuery)).ToList();
+            List<Document> documents = new List<Document>();
+            if(searchCriteria == "Name")
+                documents = session.Query<Document>().Where<Document>(x => x.Name.Contains(searchQuery)).ToList();
+            else if(searchCriteria == "Author")
+                documents = session.Query<Document>().Where<Document>(x => x.Author.Contains(searchQuery)).ToList();
+            else if(searchCriteria == "Date")
+                documents = session.Query<Document>().Where<Document>(x => x.Date.ToString().Contains(searchQuery)).ToList();
             return documents;
         }
 

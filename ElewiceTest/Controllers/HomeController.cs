@@ -10,6 +10,7 @@ using DBModel.Managers;
 using DBModel.Models.Identity;
 using DBModel.Interfaces;
 using System.IO;
+using System.Collections;
 
 namespace ElewiceTest.Controllers
 {
@@ -21,7 +22,7 @@ namespace ElewiceTest.Controllers
         private IEnumerable<Document> DocumentList { get; set; }
         private UserRepositoryManager UserManager { get; set; }
         private const string FDir_AppData = "~/App_Data/Documents/";
-        private List<SelectListItem> listItems;
+        public List<SelectListItem> listItems;
         #endregion
         public User CurrentUser
         {
@@ -62,12 +63,13 @@ namespace ElewiceTest.Controllers
                 Value = "Date",
                 Selected = false
             });
+            ViewData["SearchBy"] = ViewData["SortBy"] = listItems;
         }
         //GET: Home
         [Authorize]
         public ActionResult Index()
         {
-            ViewData["SearchBy"] = listItems;
+            //ViewData["SearchBy"] = listItems;
             if (CurrentUser != null)
             {
                 ViewBag.Username = CurrentUser.UserName;
@@ -88,7 +90,6 @@ namespace ElewiceTest.Controllers
                 var uploadedFileName = Path.GetFileName(model.uploadedFile.FileName);
                 model.Name = $"{model.Name}.{uploadedFileName.Split('.').Last()}";
                 model.Author = CurrentUser.UserName;
-                //UserFile.Save(model);
                 if (!Directory.Exists($"{FDir_AppData}{model.Author}"))
                 {
                     var path = Server.MapPath($"{FDir_AppData}{model.Author}");
@@ -121,18 +122,29 @@ namespace ElewiceTest.Controllers
         }
 
         [HttpPost]
-        public ActionResult Index(string str)
+        public ActionResult Index(IEnumerable<Document> tt)
         {
-            ViewData["SearchBy"] = listItems;
+            var rrr = ModelState.ToArray();
+            IEnumerable<Document> ttt = ViewData["currentModel"] as IEnumerable<Document>;
             ViewBag.Username = CurrentUser.UserName;
-            var criteria = Request.Params["SearchBy"];
-            var searchQuery = Request.Params["findQuery"];
-            ChangeSelect(criteria);
-            if (searchQuery != string.Empty)
-                ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b> (Search by {criteria})";
+            IEnumerable<Document> model = new List<Document>();
+            if(Request.Params["sortButton"] == "Sort by")
+            {
+                var criteria = Request.Params["SortBy"];
+                model = DocumentManager.GetAllSortBy(criteria);
+            }
             else
-                ViewBag.SearchResult = string.Empty;
-            return View("Index", DocumentManager.GetAllByCriteria(searchQuery, criteria));
+            {
+                var criteria = Request.Params["SearchBy"];
+                var searchQuery = Request.Params["findQuery"];
+                ChangeSelect(criteria);
+                if (searchQuery != string.Empty)
+                    ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b> (Search by {criteria})";
+                else
+                    ViewBag.SearchResult = string.Empty;
+                model = DocumentManager.GetAllByCriteria(searchQuery, criteria);
+            }
+            return View("Index", model);
         }
         private void ChangeSelect(string item)
         {

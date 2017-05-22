@@ -4,15 +4,15 @@
     ViewBag.Title = "Index";
 }
     <table>
+@using (Html.BeginForm("Index"))
+{
         <tr>
             <td>
-                @using (Html.BeginForm("Index", "Home", FormMethod.Post))
-                {
+                
                     <input type="text" name="findQuery" />
                     <input type="submit" name="findButton" value="Search" class="btn btn-default" />
-                    @Html.DropDownList("SearchBy");
-                 }
-
+                    @Html.DropDownList("SearchBy")
+                 @*}*@
             </td>
         </tr>
         <tr>
@@ -20,6 +20,17 @@
                 @Html.Raw(ViewBag.SearchResult)
             </td>
         </tr>
+        <tr>
+            <td>
+                Sort by:
+                @*@using (Html.BeginForm("Index", "Home", FormMethod.Post)) {*@
+                    @Html.DropDownList("SortBy")
+                    <input type="submit" name="sortButton" value="Sort by" class="btn btn-default" />
+                @{ViewData["currentModel"] = Model;}
+                @*}*@
+            </td>
+        </tr>
+}
     </table>
     <br />
     <table id="tg-B3NuJ" class="tg" style="table-layout: fixed;">

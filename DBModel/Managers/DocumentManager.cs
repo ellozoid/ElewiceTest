@@ -14,25 +14,41 @@ namespace DBModel.Managers
     public class DocumentManager : IDocumentRepository
     {
         private ISession session;
+        private IEnumerable<Document> document;
 
         public DocumentManager()
         {
             session = NHibernateHelper.MakeSession();
+            document = session.Query<Document>().ToList();
         }
         public IEnumerable<Document> GetAll()
         {
-            return session.Query<Document>().ToList();
+            //document = session.Query<Document>().ToList();
+            return document;
         }
 
         public IEnumerable<Document> GetAllByCriteria(string searchQuery, string searchCriteria = "Name")
         {
             List<Document> documents = new List<Document>();
             if(searchCriteria == "Name")
-                documents = session.Query<Document>().Where<Document>(x => x.Name.Contains(searchQuery)).ToList();
+                documents = document.Where<Document>(x => x.Name.Contains(searchQuery)).ToList();
             else if(searchCriteria == "Author")
-                documents = session.Query<Document>().Where<Document>(x => x.Author.Contains(searchQuery)).ToList();
+                documents = document.Where<Document>(x => x.Author.Contains(searchQuery)).ToList();
             else if(searchCriteria == "Date")
-                documents = session.Query<Document>().Where<Document>(x => x.Date.ToString().Contains(searchQuery)).ToList();
+                documents = document.Where<Document>(x => x.Date.ToString().Contains(searchQuery)).ToList();
+            document = documents;
+            return documents;
+        }
+
+        public IEnumerable<Document> GetAllSortBy(string sortCriteria = "Name")
+        {
+            List<Document> documents = new List<Document>();
+            if (sortCriteria == "Name")
+                documents = document.OrderBy(x => x.Name).ToList();
+            else if (sortCriteria == "Author")
+                documents = document.OrderBy(x => x.Author).ToList();
+            else if (sortCriteria == "Date")
+                documents = document.OrderBy(x => x.Date).ToList();
             return documents;
         }
 

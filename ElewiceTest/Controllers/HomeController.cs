@@ -11,6 +11,7 @@ using DBModel.Models.Identity;
 using DBModel.Interfaces;
 using System.IO;
 using System.Collections;
+using ElewiceTest.Models;
 
 namespace ElewiceTest.Controllers
 {
@@ -19,7 +20,7 @@ namespace ElewiceTest.Controllers
         #region PrivateMembers
         private User currentUser = null;
         private DocumentManager DocumentManager { get; set; }
-        private IEnumerable<Document> DocumentList { get; set; }
+        private static IEnumerable<Document> DocumentList { get; set; }
         private UserRepositoryManager UserManager { get; set; }
         private const string FDir_AppData = "~/App_Data/Documents/";
         public List<SelectListItem> listItems;
@@ -43,7 +44,8 @@ namespace ElewiceTest.Controllers
         {
             DocumentManager = new DocumentManager();
             UserManager = new UserRepositoryManager();
-            DocumentList = DocumentManager.GetAll();
+            if(DocumentList == null)
+                DocumentList = DocumentManager.GetAll();
             listItems = new List<SelectListItem>();
             listItems.Add(new SelectListItem
             {
@@ -69,7 +71,7 @@ namespace ElewiceTest.Controllers
         [Authorize]
         public ActionResult Index()
         {
-            //ViewData["SearchBy"] = listItems;
+            DocumentList = DocumentManager.GetAll();
             if (CurrentUser != null)
             {
                 ViewBag.Username = CurrentUser.UserName;
@@ -122,16 +124,14 @@ namespace ElewiceTest.Controllers
         }
 
         [HttpPost]
-        public ActionResult Index(IEnumerable<Document> tt)
+        public ActionResult Index(IEnumerable<Document> Model)
         {
-            var rrr = ModelState.ToArray();
-            IEnumerable<Document> ttt = ViewData["currentModel"] as IEnumerable<Document>;
             ViewBag.Username = CurrentUser.UserName;
             IEnumerable<Document> model = new List<Document>();
             if(Request.Params["sortButton"] == "Sort by")
             {
                 var criteria = Request.Params["SortBy"];
-                model = DocumentManager.GetAllSortBy(criteria);
+                model = DocumentManager.GetAllSortBy(DocumentList, criteria);
             }
             else
             {
@@ -142,7 +142,7 @@ namespace ElewiceTest.Controllers
                     ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b> (Search by {criteria})";
                 else
                     ViewBag.SearchResult = string.Empty;
-                model = DocumentManager.GetAllByCriteria(searchQuery, criteria);
+                model = DocumentList = DocumentManager.GetAllByCriteria(searchQuery, criteria);
             }
             return View("Index", model);
         }

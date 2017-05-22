@@ -40,15 +40,15 @@ namespace DBModel.Managers
             return documents;
         }
 
-        public IEnumerable<Document> GetAllSortBy(string sortCriteria = "Name")
+        public IEnumerable<Document> GetAllSortBy(IEnumerable<Document> model, string sortCriteria = "Name")
         {
             List<Document> documents = new List<Document>();
             if (sortCriteria == "Name")
-                documents = document.OrderBy(x => x.Name).ToList();
+                documents = model.OrderBy(x => x.Name).ToList();
             else if (sortCriteria == "Author")
-                documents = document.OrderBy(x => x.Author).ToList();
+                documents = model.OrderBy(x => x.Author).ToList();
             else if (sortCriteria == "Date")
-                documents = document.OrderBy(x => x.Date).ToList();
+                documents = model.OrderBy(x => x.Date).ToList();
             return documents;
         }
 

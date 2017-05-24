@@ -14,7 +14,7 @@ namespace DBModel.Interfaces
         ///// <summary>
         ///// Сохранение в базу
         ///// </summary>
-        //void Save();
+        void Save(T obj);
 
 
         /// <summary>

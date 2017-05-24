@@ -9,6 +9,9 @@ namespace DBModel.Interfaces
 {
     public interface IUserRepository : IBaseRepository<User>
     {
+        void Delete(User user);
+        User Find(int userId);
+        User Find(string userName);
         User GetCurrentUser(string userName);
     }
 }

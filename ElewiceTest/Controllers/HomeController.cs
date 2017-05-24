@@ -1,17 +1,9 @@
-﻿using NHibernate;
-using NHibernate.Linq;
-using System;
-using System.Linq;
+﻿using System;
 using System.Web.Mvc;
 using System.Collections.Generic;
 using DBModel.Models;
-using DBModel.Helpers;
 using DBModel.Managers;
-using DBModel.Models.Identity;
-using DBModel.Interfaces;
 using System.IO;
-using System.Collections;
-using ElewiceTest.Models;
 
 namespace ElewiceTest.Controllers
 {
@@ -44,8 +36,7 @@ namespace ElewiceTest.Controllers
         {
             DocumentManager = new DocumentManager();
             UserManager = new UserRepositoryManager();
-            if(DocumentList == null)
-                DocumentList = DocumentManager.GetAll();
+            DocumentList = DocumentManager.GetAll();
             listItems = new List<SelectListItem>();
             listItems.Add(new SelectListItem
             {
@@ -65,7 +56,7 @@ namespace ElewiceTest.Controllers
                 Value = "Date",
                 Selected = false
             });
-            ViewData["SearchBy"] = ViewData["SortBy"] = listItems;
+            ViewData["SearchBy"] = listItems;
         }
         //GET: Home
         [Authorize]
@@ -89,62 +80,41 @@ namespace ElewiceTest.Controllers
             ViewBag.Username = CurrentUser.UserName;
             if (model.uploadedFile != null && model.Name != string.Empty)
             {
-                var uploadedFileName = Path.GetFileName(model.uploadedFile.FileName);
-                model.Name = $"{model.Name}.{uploadedFileName.Split('.').Last()}";
+                var fileNameExtension = Path.GetExtension(model.uploadedFile.FileName);
+                model.Date = DateTime.Now;
+                model.Name = $"{model.Name}[{model.Date.ToString().Replace(':', '_')}]{fileNameExtension}";
                 model.Author = CurrentUser.UserName;
-                if (!Directory.Exists($"{FDir_AppData}{model.Author}"))
-                {
-                    var path = Server.MapPath($"{FDir_AppData}{model.Author}");
-                    Directory.CreateDirectory(path);
-                    model.uploadedFile.SaveAs(Server.MapPath($"{FDir_AppData}{model.Author}/{model.Name}"));
-                }
-                else
-                {
-                    model.uploadedFile.SaveAs(Server.MapPath($"{FDir_AppData}{model.Author}/{model.Name}"));
-                }
-                //Сохраняем здесь
+                
+                model.uploadedFile.SaveAs(Server.MapPath($"{FDir_AppData}{model.Name}"));
+                
                 DocumentManager.Save(model);
                 return RedirectToAction("Index");
             }
             else
             {
-                if (model.uploadedFile == null && model.Name == string.Empty)
-                    ModelState.AddModelError("", "Enter the name of the document and select the file to upload.");
-                else if (model.Name == string.Empty)
-                    ModelState.AddModelError("", "Enter the name of the document");
-                else if (model.uploadedFile == null)
-                    ModelState.AddModelError("", "Select the file to upload");
+                ModelState.AddModelError("", "Enter the name of the document and select the file to upload.");
             }
             return View(model);
         }
-        public FilePathResult DownloadFile(string fileForDownload, string author)
+        public FilePathResult DownloadFile(string fileForDownload)
         {
-            var documentPath = Server.MapPath($"{FDir_AppData}{author}/{fileForDownload}");
-            return File(documentPath, "application/unknown", fileForDownload);
+            var documentPath = Server.MapPath($"{FDir_AppData}/{fileForDownload}");
+            return File(documentPath, "application/unknown", fileForDownload.Split('[')[0] + Path.GetExtension(fileForDownload));
         }
 
         [HttpPost]
         public ActionResult Index(IEnumerable<Document> Model)
         {
             ViewBag.Username = CurrentUser.UserName;
-            IEnumerable<Document> model = new List<Document>();
-            if(Request.Params["sortButton"] == "Sort by")
-            {
-                var criteria = Request.Params["SortBy"];
-                model = DocumentManager.GetAllSortBy(DocumentList, criteria);
-            }
+
+            var criteria = Request.Params["SearchBy"];
+            var searchQuery = Request.Params["findQuery"];
+            ChangeSelect(criteria);
+            if (searchQuery != string.Empty)
+                ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b> (Search by {criteria})";
             else
-            {
-                var criteria = Request.Params["SearchBy"];
-                var searchQuery = Request.Params["findQuery"];
-                ChangeSelect(criteria);
-                if (searchQuery != string.Empty)
-                    ViewBag.SearchResult = $"Results for : <b>{searchQuery}</b> (Search by {criteria})";
-                else
-                    ViewBag.SearchResult = string.Empty;
-                model = DocumentList = DocumentManager.GetAllByCriteria(searchQuery, criteria);
-            }
-            return View("Index", model);
+                ViewBag.SearchResult = string.Empty;
+            return View("Index", DocumentManager.GetAllByCriteria(searchQuery, criteria));
         }
         private void ChangeSelect(string item)
         {

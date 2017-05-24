@@ -10,7 +10,7 @@ namespace DBModel.Helpers
 {
     public class NHibernateHelper
     {
-        private static ISessionFactory sessionFactory;
+        private ISessionFactory sessionFactory;
         public NHibernateHelper()
         {
             sessionFactory = Fluently.Configure()
@@ -20,18 +20,11 @@ namespace DBModel.Helpers
             .ExposeConfiguration(cfg => new SchemaUpdate(cfg).Execute(false, true))
             .BuildSessionFactory();
         }
-        public static ISession MakeSession()
+        public ISession MakeSession()
         {
             return sessionFactory.OpenSession();
         }
 
-        public IUserStore<User, int> Users
-        {
-            get { return new IdentityStore(MakeSession()); }
-        }
-        public User GetCurrentUser(string userName)
-        {
-            return new NHibernateHelper().Users.FindByNameAsync(userName).Result;
-        }
+        
     }
 }

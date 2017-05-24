@@ -1,4 +1,5 @@
-﻿using DBModel.Models;
+﻿using DBModel.Managers;
+using DBModel.Models;
 using Microsoft.AspNet.Identity;
 using NHibernate;
 using System;
@@ -12,42 +13,40 @@ namespace DBModel.Models.Identity
         IUserLockoutStore<User, int>,
         IUserTwoFactorStore<User, int>
     {
-        private readonly ISession session;
+        private UserRepositoryManager userManager;
 
-        public IdentityStore(ISession session)
+        public IdentityStore()
         {
-            this.session = session;
+            userManager = new UserRepositoryManager();
         }
 
         #region IUserStore<User, int>
         public Task CreateAsync(User user)
         {
-            return Task.Run(() => session.SaveOrUpdate(user));
+            return Task.Run(() => userManager.Save(user));
         }
 
         public Task DeleteAsync(User user)
         {
-            return Task.Run(() => session.Delete(user));
+            return Task.Run(() => userManager.Delete(user));
         }
 
         public Task<User> FindByIdAsync(int userId)
         {
-            return Task.Run(() => session.Get<User>(userId));
+            return Task.Run(() => userManager.Find(userId));
         }
 
         public Task<User> FindByNameAsync(string userName)
         {
             return Task.Run(() =>
             {
-                return session.QueryOver<User>()
-                    .Where(u => u.UserName == userName)
-                    .SingleOrDefault();
+                return userManager.Find(userName);
             });
         }
 
         public Task UpdateAsync(User user)
         {
-            return Task.Run(() => session.SaveOrUpdate(user));
+            return Task.Run(() => userManager.Save(user));
         }
         #endregion
 
